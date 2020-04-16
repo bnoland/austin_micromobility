@@ -1,0 +1,64 @@
+---
+title: "Austin Micromobility EDA"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+source("code/packages.R")
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  #fig.width = 6,
+  fig.width = 9,
+  fig.asp = 0.618,
+  out.width = "70%",
+  fig.align = "center",
+  fig.show = "hold",
+  eval = TRUE
+)
+```
+
+```{r}
+loadd(data)
+glimpse(data)
+```
+
+```{r}
+readd(all_freq_plot)
+```
+
+```{r}
+readd(scooter_freq_plot)
+```
+
+```{r}
+readd(bicycle_freq_plot)
+```
+
+```{r}
+readd(all_freq_2019_plot)
+```
+
+```{r}
+readd(scooter_freq_2019_plot)
+```
+
+```{r}
+readd(bicycle_freq_2019_plot)
+```
+
+
+```{r}
+# TODO: Verify that counts correspond with Bob's data.
+count_data <- data %>%
+  group_by(year) %>%
+  #count(date(start_time))
+  count(day_offset)
+```
+
+```{r}
+count_data <- data %>%
+  group_by(year, vehicle_type) %>%
+  #count(date(start_time))
+  count(day_offset)
+```
