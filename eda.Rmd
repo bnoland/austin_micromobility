@@ -18,6 +18,16 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Exploration of the raw data
+
+```{r}
+loadd(raw_data)
+```
+
+
+
+# Exploration of the data after cleaning
+
 ```{r}
 loadd(data)
 glimpse(data)
@@ -45,20 +55,4 @@ readd(scooter_freq_2019_plot)
 
 ```{r}
 readd(bicycle_freq_2019_plot)
-```
-
-
-```{r}
-# TODO: Verify that counts correspond with Bob's data.
-count_data <- data %>%
-  group_by(year) %>%
-  #count(date(start_time))
-  count(day_offset)
-```
-
-```{r}
-count_data <- data %>%
-  group_by(year, vehicle_type) %>%
-  #count(date(start_time))
-  count(day_offset)
 ```

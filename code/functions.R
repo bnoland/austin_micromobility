@@ -1,5 +1,5 @@
 
-# Data loading/initial processing -----------------------------------------
+# Loading the data --------------------------------------------------------
 
 load_data <- function(path) {
   raw_data <- read_csv(
@@ -27,15 +27,15 @@ load_data <- function(path) {
       #end_census = col_character()
     ),
     locale = locale(tz = "US/Central"),
-    #n_max = 10000,
     skip = 1
   )
 }
 
-# start_date <- c(
-#   "2019" = sxsw_2019_dates[["end"]],
-#   "2020" = (sxsw_2019_dates[["end"]] - mdy("01-01-2019")) + mdy("01-01-2020")
-# )
+# Initial exploration -----------------------------------------------------
+
+# TODO
+
+# Data cleaning -----------------------------------------------------------
 
 # First Monday of each year.
 first_monday_date <- c(
@@ -43,16 +43,13 @@ first_monday_date <- c(
   "2020" = mdy("01-06-2020")
 )
 
-# Date same number of days after start for each year.
-# TODO: May want to do something like start_date[[year]] + days(90) instead.
-# end_date <- c(
-#   "2019" = mdy("04-08-2019"),
-#   "2020" = mdy("04-06-2020")
-# )
-
 clean_data <- function(raw_data) {
+  # TODO: May want more rigorous filtering.
   raw_data %>%
     filter(
+      year(start_time) %in% c("2019", "2020"),
+      year(end_time) %in% c("2019", "2020"),
+      
       trip_distance > 0,
       trip_duration > 0,
       
@@ -68,36 +65,39 @@ clean_data <- function(raw_data) {
     )
 }
 
-restrict_day_offset <- function(data_all_dates,
-                                start_offset = 0, end_offset = 366) {
-  # Check if a given date is in the pertinent date range for the given year.
-  # in_date_range <- function(year, date_time) {
-  #   date_time >= start_date[[year]] & date_time <= end_date[[year]]
-  # }
-  # 
-  # data_all_dates %>%
-  #   filter(
-  #     in_date_range("2019", start_time) | in_date_range("2020", start_time)
-  #   )
-  
+restrict_day_offset <- function(data_all_dates, start_offset, end_offset) {
   data_all_dates %>%
     filter(day_offset >= start_offset & day_offset <= end_offset)
 }
 
 # Plotting ----------------------------------------------------------------
 
-plot_frequencies <- function(data, years = c("2019", "2020"),
-                             vehicle_types = c("scooter", "bicycle"),
-                             label_increment = NULL) {
-  data <- data %>%
-    filter(vehicle_type %in% vehicle_types, year %in% years)
+compute_count_data <- function(data, years = c("2019", "2020"),
+                               vehicle_types = c("scooter", "bicycle")) {
   
   start_offset = min(data$day_offset)
   end_offset = max(data$day_offset)
   
-  plot <- ggplot(data, aes(x = day_offset, col = year,
-                           linetype = vehicle_type)) +
-    geom_freqpoly(binwidth = 1) +
+  data %>%
+    mutate(
+      day_offset = factor(day_offset, levels = start_offset:end_offset)
+    ) %>%
+    count(year, vehicle_type, day_offset, .drop = FALSE) %>%
+    mutate(day_offset = as.integer(levels(day_offset))[day_offset]) %>%
+    filter(vehicle_type %in% vehicle_types, year %in% years)
+}
+
+plot_frequencies <- function(data, years = c("2019", "2020"),
+                             vehicle_types = c("scooter", "bicycle"),
+                             label_increment = NULL) {
+  
+  count_data <- compute_count_data(data, years, vehicle_types)
+  start_offset = min(count_data$day_offset)
+  end_offset = max(count_data$day_offset)
+  
+  plot <- ggplot(count_data, aes(x = day_offset, y = n,
+                                 col = year, linetype = vehicle_type)) +
+    geom_line() +
     geom_vline(
       xintercept = seq(0, end_offset, by = 7),
       linetype = "longdash",
