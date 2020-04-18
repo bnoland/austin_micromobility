@@ -22,15 +22,73 @@ knitr::opts_chunk$set(
 
 ```{r}
 loadd(raw_data)
+glimpse(raw_data)
 ```
 
+```{r}
+raw_data %>%
+  summarize_all(~ sum(is.na(.)))
+```
 
+```{r}
+raw_data %>%
+  count(vehicle_type)
+```
+
+```{r}
+raw_data %>%
+  group_by(vehicle_type, year) %>%
+  summarize(
+    n = n(),
+    max_trip_duration = max(trip_duration),
+    min_trip_duration = min(trip_duration),
+    max_trip_distance = max(trip_distance),
+    min_trip_distance = min(trip_distance)
+  )
+```
+
+```{r}
+readd(trip_duration_plot)
+```
+
+```{r}
+readd(trip_distance_plot)
+```
+
+```{r}
+raw_data %>%
+  count(year(start_time))
+```
+
+```{r}
+raw_data %>%
+  count(year(end_time))
+```
+
+```{r}
+raw_data %>%
+  count(start_district)
+```
+
+```{r}
+raw_data %>%
+  count(end_district)
+```
+
+```{r}
+raw_data %>%
+  count(year)
+```
 
 # Exploration of the data after cleaning
 
 ```{r}
 loadd(data)
 glimpse(data)
+```
+
+```{r}
+readd(n_obs_deleted)
 ```
 
 ```{r}

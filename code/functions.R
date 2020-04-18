@@ -2,6 +2,8 @@
 # Loading the data --------------------------------------------------------
 
 load_data <- function(path) {
+  date_time_format <- "%m/%d/%Y %I:%M:%S %p"
+  
   raw_data <- read_csv(
     file = path,
     col_names = c("id", "device_id", "vehicle_type", "trip_duration",
@@ -9,22 +11,23 @@ load_data <- function(path) {
                   "month", "hour", "day_of_week", "start_district",
                   "end_district", "year", "start_census", "end_census"),
     col_types = cols_only(
-      #id = col_character(),
-      #device_id = col_character(),
-      vehicle_type = col_factor(levels = c("bicycle", "scooter")),
+      id = col_character(),
+      device_id = col_character(),
+      # vehicle_type = col_factor(levels = c("bicycle", "scooter")),
+      vehicle_type = col_character(),
       trip_duration = col_double(),
       trip_distance = col_double(),
-      start_time = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      end_time = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      #modified_date = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      month = col_double(),
-      hour = col_double(),
-      day_of_week = col_double(),
+      start_time = col_datetime(format = date_time_format),
+      end_time = col_datetime(format = date_time_format),
+      # modified_date = col_datetime(format = date_time_format),
+      # month = col_double(),
+      # hour = col_double(),
+      # day_of_week = col_double(),
       start_district = col_character(),
       end_district = col_character(),
       year = col_character()
-      #start_census = col_character(),
-      #end_census = col_character()
+      # start_census = col_character(),
+      # end_census = col_character()
     ),
     locale = locale(tz = "US/Central"),
     skip = 1
@@ -33,7 +36,15 @@ load_data <- function(path) {
 
 # Initial exploration -----------------------------------------------------
 
-# TODO
+plot_trip_duration <- function(raw_data) {
+  ggplot(raw_data, aes(x = trip_duration)) +
+    geom_histogram()
+}
+
+plot_trip_distance <- function(raw_data) {
+  ggplot(raw_data, aes(x = trip_distance)) +
+    geom_histogram()
+}
 
 # Data cleaning -----------------------------------------------------------
 
@@ -70,7 +81,7 @@ restrict_day_offset <- function(data_all_dates, start_offset, end_offset) {
     filter(day_offset >= start_offset & day_offset <= end_offset)
 }
 
-# Plotting ----------------------------------------------------------------
+# Exploration after cleaning ----------------------------------------------
 
 compute_count_data <- function(data, years = c("2019", "2020"),
                                vehicle_types = c("scooter", "bicycle")) {
