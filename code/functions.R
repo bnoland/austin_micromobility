@@ -132,9 +132,32 @@ plot_council_districts <- function(data, year, vehicle_type) {
       geom_tile(aes(fill = n))
 }
 
-# TODO: How should this be done? Mean counts per time increment or something?
-plot_start_times <- function(data, years = c("2019", "2020"),
-                             vehicle_types = c("scooter", "bicycle")) {
+plot_start_times <- function(data, year, vehicle_type, part_of_week) {
+  data <- data %>%
+    filter(year == !!year, vehicle_type == !!vehicle_type)
+  
+  # TODO: Should be done in the data cleaning function.
+  data <- data %>%
+    mutate(
+      day_of_week = wday(start_time, week_start = 1),
+      month_label = month(start_time, label = TRUE),
+      #day_of_week_name = wday(start_time, week_start = 1, label = TRUE),
+      hours_since_midnight = hour(start_time) + minute(start_time) / 60
+        + second(start_time) / 3600,
+      holiday = FALSE  # TODO: Deal with holidays.
+    )
+  
+  if (part_of_week == "weekdays") {
+    data <- data %>%
+      filter(day_of_week <= 5)
+  }
+  else if (part_of_week == "weekends") {
+    data <- data %>%
+      filter(day_of_week > 5)
+  }
+  
+  ggplot(data, aes(x = hours_since_midnight, y = month_label)) +
+    geom_density_ridges(scale = 0.9)
 }
 
 compute_count_data <- function(data, years = c("2019", "2020"),

@@ -76,6 +76,8 @@ raw_data %>%
 
 # Exploration of the data after cleaning
 
+<!-- TODO: Should verify that the data cleaning was performed correctly. -->
+
 ```{r}
 loadd(data)
 glimpse(data)

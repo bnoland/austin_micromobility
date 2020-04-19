@@ -6,7 +6,7 @@ sxsw_2019_day_offsets <- c(
 )
 
 start_offset <- sxsw_2019_day_offsets[["end"]] + 1  # Day after end of SXSW 2019
-end_offset <- 96
+end_offset <- 104
 
 data_plan <- drake_plan(
   raw_data = load_data(file_in("Shared_Micromobility_Vehicle_Trips.csv")),
