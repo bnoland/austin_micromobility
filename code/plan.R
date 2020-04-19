@@ -16,11 +16,25 @@ data_plan <- drake_plan(
 )
 
 raw_data_eda_plan <- drake_plan(
-  trip_duration_plot = plot_trip_duration(raw_data),
-  trip_distance_plot = plot_trip_distance(raw_data)
+  # trip_duration_plot = plot_trip_duration(raw_data),
+  # trip_distance_plot = plot_trip_distance(raw_data)
 )
 
 clean_data_eda_plan <- drake_plan(
+  trip_distance_plot = plot_trip_distance(data),
+  trip_short_distance_plot = plot_trip_distance(data, max_distance = 10),
+  trip_duration_plot = plot_trip_duration(data),
+  trip_short_duration_plot = plot_trip_duration(data, max_duration = 3),
+  
+  council_district_scooter_2019_plot
+    = plot_council_districts(data, year = "2019", vehicle_type = "scooter"),
+  council_district_scooter_2020_plot
+    = plot_council_districts(data, year = "2020", vehicle_type = "scooter"),
+  council_district_bicycle_2019_plot
+    = plot_council_districts(data, year = "2019", vehicle_type = "bicycle"),
+  council_district_bicycle_2020_plot
+    = plot_council_districts(data, year = "2020", vehicle_type = "bicycle"),
+  
   all_freq_plot = plot_frequencies(data, label_increment = 1),
   scooter_freq_plot = plot_frequencies(data, vehicle_types = c("scooter"),
                                        label_increment = 1),

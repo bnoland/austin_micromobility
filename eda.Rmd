@@ -40,19 +40,13 @@ raw_data %>%
   group_by(vehicle_type, year) %>%
   summarize(
     n = n(),
-    max_trip_duration = max(trip_duration),
-    min_trip_duration = min(trip_duration),
-    max_trip_distance = max(trip_distance),
-    min_trip_distance = min(trip_distance)
+    max_trip_duration = max(trip_duration_hours),
+    min_trip_duration = min(trip_duration_hours),
+    max_trip_distance = max(trip_distance_km),
+    min_trip_distance = min(trip_distance_km)
+    # min_average_speed = min(average_speed, na.rm = TRUE),
+    # max_average_speed = max(average_speed, na.rm = TRUE)
   )
-```
-
-```{r}
-readd(trip_duration_plot)
-```
-
-```{r}
-readd(trip_distance_plot)
 ```
 
 ```{r}
@@ -89,6 +83,38 @@ glimpse(data)
 
 ```{r}
 readd(n_obs_deleted)
+```
+
+```{r}
+readd(trip_distance_plot)
+```
+
+```{r}
+readd(trip_short_distance_plot)
+```
+
+```{r}
+readd(trip_duration_plot)
+```
+
+```{r}
+readd(trip_short_duration_plot)
+```
+
+```{r}
+readd(council_district_scooter_2019_plot)
+```
+
+```{r}
+readd(council_district_scooter_2020_plot)
+```
+
+```{r}
+readd(council_district_bicycle_2019_plot)
+```
+
+```{r}
+readd(council_district_bicycle_2020_plot)
 ```
 
 ```{r}

@@ -32,19 +32,27 @@ load_data <- function(path) {
     locale = locale(tz = "US/Central"),
     skip = 1
   )
+  
+  raw_data <- raw_data %>%
+    mutate(
+      trip_duration_hours = trip_duration / 3600,
+      trip_distance_km = trip_distance / 1000
+    )
+  
+  raw_data
 }
 
 # Initial exploration -----------------------------------------------------
 
-plot_trip_duration <- function(raw_data) {
-  ggplot(raw_data, aes(x = trip_duration)) +
-    geom_histogram()
-}
-
-plot_trip_distance <- function(raw_data) {
-  ggplot(raw_data, aes(x = trip_distance)) +
-    geom_histogram()
-}
+# plot_trip_duration <- function(raw_data) {
+#   ggplot(raw_data %>% slice(1:10000), aes(x = trip_duration_hours)) +
+#     geom_histogram(binwidth = 1)
+# }
+# 
+# plot_trip_distance <- function(raw_data) {
+#   ggplot(raw_data, aes(x = trip_distance_km)) +
+#     geom_histogram(binwidth = 10)
+# }
 
 # Data cleaning -----------------------------------------------------------
 
@@ -54,26 +62,28 @@ first_monday_date <- c(
   "2020" = mdy("01-06-2020")
 )
 
+# TODO: May want to make start_district and end_district factors.
 clean_data <- function(raw_data) {
-  # TODO: May want more rigorous filtering.
-  raw_data %>%
+  council_districts <- as.character(1:10)
+  
+  data <- raw_data %>%
+    drop_na() %>%
     filter(
       year(start_time) %in% c("2019", "2020"),
       year(end_time) %in% c("2019", "2020"),
-      
       trip_distance > 0,
       trip_duration > 0,
-      
-      # TODO: Needs to be properly justified.
-      trip_distance <= 80000,  # 80 km
-      trip_duration <= 43200,  # 12 hours
-      trip_distance / trip_duration * 3.6 <= 50,  # 50 km/hour
-      
-      start_district != "0", end_district != "0",
+      trip_distance_km <= 80,
+      trip_duration_hours <= 12,
+      trip_distance_km / trip_duration_hours <= 50,  # Average speed (km/hour)
+      start_district %in% council_districts,
+      end_district %in% council_districts
     ) %>%
     mutate(
       day_offset = (first_monday_date[year] %--% date(start_time)) / ddays(1)
     )
+  
+  data
 }
 
 restrict_day_offset <- function(data_all_dates, start_offset, end_offset) {
@@ -83,19 +93,65 @@ restrict_day_offset <- function(data_all_dates, start_offset, end_offset) {
 
 # Exploration after cleaning ----------------------------------------------
 
+# TODO: For next two functions, could also just change the limits on the x-axis
+# rather than filter the data.
+
+plot_trip_distance <- function(data, years = c("2019", "2020"),
+                               vehicle_types = c("scooter", "bicycle"),
+                               max_distance = Inf) {
+  
+  data <- data %>%
+    filter(trip_distance_km <= max_distance)
+  
+  ggplot(data, aes(x = trip_distance_km,
+                   col = year, linetype = vehicle_type)) +
+    geom_freqpoly(binwidth = 0.1)
+}
+
+plot_trip_duration <- function(data, years = c("2019", "2020"),
+                               vehicle_types = c("scooter", "bicycle"),
+                               max_duration = Inf) {
+  
+  data <- data %>%
+    filter(trip_duration_hours <= max_duration)
+  
+  ggplot(data, aes(x = trip_duration_hours,
+                   col = year, linetype = vehicle_type)) +
+    geom_freqpoly(binwidth = 1/12)  # 5 minute intervals
+}
+
+# TODO: Ensure that council districts with no corresponding observations aren't
+# dropped.
+plot_council_districts <- function(data, year, vehicle_type) {
+  data <- data %>%
+    filter(year == !!year, vehicle_type == !!vehicle_type)
+  
+  data %>%
+    count(start_district, end_district) %>%
+    ggplot(aes(x = start_district, y = end_district)) +
+      geom_tile(aes(fill = n))
+}
+
+# TODO: How should this be done? Mean counts per time increment or something?
+plot_start_times <- function(data, years = c("2019", "2020"),
+                             vehicle_types = c("scooter", "bicycle")) {
+}
+
 compute_count_data <- function(data, years = c("2019", "2020"),
                                vehicle_types = c("scooter", "bicycle")) {
   
   start_offset = min(data$day_offset)
   end_offset = max(data$day_offset)
   
-  data %>%
+  data <- data %>%
     mutate(
       day_offset = factor(day_offset, levels = start_offset:end_offset)
     ) %>%
     count(year, vehicle_type, day_offset, .drop = FALSE) %>%
     mutate(day_offset = as.integer(levels(day_offset))[day_offset]) %>%
     filter(vehicle_type %in% vehicle_types, year %in% years)
+  
+  data
 }
 
 plot_frequencies <- function(data, years = c("2019", "2020"),
