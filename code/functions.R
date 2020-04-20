@@ -42,18 +42,6 @@ load_data <- function(path) {
   raw_data
 }
 
-# Initial exploration -----------------------------------------------------
-
-# plot_trip_duration <- function(raw_data) {
-#   ggplot(raw_data %>% slice(1:10000), aes(x = trip_duration_hours)) +
-#     geom_histogram(binwidth = 1)
-# }
-# 
-# plot_trip_distance <- function(raw_data) {
-#   ggplot(raw_data, aes(x = trip_distance_km)) +
-#     geom_histogram(binwidth = 10)
-# }
-
 # Data cleaning -----------------------------------------------------------
 
 # First Monday of each year.
@@ -62,7 +50,6 @@ first_monday_date <- c(
   "2020" = mdy("01-06-2020")
 )
 
-# TODO: May want to make start_district and end_district factors.
 clean_data <- function(raw_data) {
   council_districts <- as.character(1:10)
   
@@ -80,15 +67,19 @@ clean_data <- function(raw_data) {
       end_district %in% council_districts
     ) %>%
     mutate(
-      day_offset = (first_monday_date[year] %--% date(start_time)) / ddays(1)
+      day_offset = (first_monday_date[year] %--% date(start_time)) / ddays(1),
+      start_district = factor(start_district, levels = council_districts),
+      end_district = factor(end_district, levels = council_districts)
     )
   
   data
 }
 
 restrict_day_offset <- function(data_all_dates, start_offset, end_offset) {
-  data_all_dates %>%
+  data <- data_all_dates %>%
     filter(day_offset >= start_offset & day_offset <= end_offset)
+  
+  data
 }
 
 # Exploration after cleaning ----------------------------------------------
@@ -103,9 +94,11 @@ plot_trip_distance <- function(data, years = c("2019", "2020"),
   data <- data %>%
     filter(trip_distance_km <= max_distance)
   
-  ggplot(data, aes(x = trip_distance_km,
-                   col = year, linetype = vehicle_type)) +
+  plot <- ggplot(data, aes(x = trip_distance_km, col = year,
+                           linetype = vehicle_type)) +
     geom_freqpoly(binwidth = 0.1)
+  
+  plot
 }
 
 plot_trip_duration <- function(data, years = c("2019", "2020"),
@@ -115,49 +108,58 @@ plot_trip_duration <- function(data, years = c("2019", "2020"),
   data <- data %>%
     filter(trip_duration_hours <= max_duration)
   
-  ggplot(data, aes(x = trip_duration_hours,
-                   col = year, linetype = vehicle_type)) +
+  plot <- ggplot(data, aes(x = trip_duration_hours, col = year,
+                           linetype = vehicle_type)) +
     geom_freqpoly(binwidth = 1/12)  # 5 minute intervals
+  
+  plot
 }
 
-# TODO: Ensure that council districts with no corresponding observations aren't
-# dropped.
-plot_council_districts <- function(data, year, vehicle_type) {
+plot_council_districts <- function(data, year, vehicle_type,
+                                   use_proportions = TRUE) {
   data <- data %>%
     filter(year == !!year, vehicle_type == !!vehicle_type)
   
-  data %>%
-    count(start_district, end_district) %>%
-    ggplot(aes(x = start_district, y = end_district)) +
-      geom_tile(aes(fill = n))
+  plot_data <- data %>%
+    count(start_district, end_district, name = "fill_value", .drop = FALSE)
+  
+  if (use_proportions) {
+    # Convert counts to proportions, rounded to 2 decimal places.
+    total_rides <- nrow(data)
+    plot_data <- plot_data %>%
+      mutate(fill_value = round(fill_value / total_rides, 2))
+  }
+  
+  plot <- ggplot(plot_data, aes(x = start_district, y = end_district)) +
+    geom_tile(aes(fill = fill_value)) +
+    geom_text(aes(label = fill_value), color = "white")
+  
+  plot
 }
 
-plot_start_times <- function(data, year, vehicle_type, part_of_week) {
+plot_start_times <- function(data, year, vehicle_type) {
   data <- data %>%
     filter(year == !!year, vehicle_type == !!vehicle_type)
   
-  # TODO: Should be done in the data cleaning function.
+  # TODO: Should this be done in the data cleaning function?
   data <- data %>%
     mutate(
       day_of_week = wday(start_time, week_start = 1),
+      day_of_week_label = wday(start_time, week_start = 1, label = TRUE),
       month_label = month(start_time, label = TRUE),
-      #day_of_week_name = wday(start_time, week_start = 1, label = TRUE),
       hours_since_midnight = hour(start_time) + minute(start_time) / 60
         + second(start_time) / 3600,
       holiday = FALSE  # TODO: Deal with holidays.
     )
   
-  if (part_of_week == "weekdays") {
-    data <- data %>%
-      filter(day_of_week <= 5)
-  }
-  else if (part_of_week == "weekends") {
-    data <- data %>%
-      filter(day_of_week > 5)
-  }
+  # TODO: Way to adjust theme to make this look more like a conventional
+  # geom_histogram()?
+  # TODO: How to add counts on the y-axis?
+  plot <- ggplot(data, aes(x = hours_since_midnight, y = day_of_week_label)) +
+    geom_density_ridges(stat = "binline", bins = 24, pad = FALSE, scale = 0.9) +
+    facet_wrap(~ month_label)
   
-  ggplot(data, aes(x = hours_since_midnight, y = month_label)) +
-    geom_density_ridges(scale = 0.9)
+  plot
 }
 
 compute_count_data <- function(data, years = c("2019", "2020"),

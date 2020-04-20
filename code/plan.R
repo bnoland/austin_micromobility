@@ -15,11 +15,6 @@ data_plan <- drake_plan(
   data = restrict_day_offset(data_all_dates, start_offset, end_offset)
 )
 
-raw_data_eda_plan <- drake_plan(
-  # trip_duration_plot = plot_trip_duration(raw_data),
-  # trip_distance_plot = plot_trip_distance(raw_data)
-)
-
 clean_data_eda_plan <- drake_plan(
   trip_distance_plot = plot_trip_distance(data),
   trip_short_distance_plot = plot_trip_distance(data, max_distance = 10),
@@ -34,6 +29,8 @@ clean_data_eda_plan <- drake_plan(
     = plot_council_districts(data, year = "2019", vehicle_type = "bicycle"),
   council_district_bicycle_2020_plot
     = plot_council_districts(data, year = "2020", vehicle_type = "bicycle"),
+  
+  # TODO: Add in some plots of start time distributions.
   
   all_freq_plot = plot_frequencies(data, label_increment = 1),
   scooter_freq_plot = plot_frequencies(data, vehicle_types = c("scooter"),
@@ -50,6 +47,5 @@ clean_data_eda_plan <- drake_plan(
 
 plan <- bind_plans(
   data_plan,
-  raw_data_eda_plan,
   clean_data_eda_plan
 )
