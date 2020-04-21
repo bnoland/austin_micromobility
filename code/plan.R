@@ -1,8 +1,8 @@
 
 # Day offsets corresponding to start and end of SXSW 2019.
 sxsw_2019_day_offsets <- c(
-  "start" = 66,
-  "end" = 75
+  "start" = 60,
+  "end" = 69
 )
 
 start_offset <- sxsw_2019_day_offsets[["end"]] + 1  # Day after end of SXSW 2019

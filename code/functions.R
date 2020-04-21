@@ -115,6 +115,7 @@ plot_trip_duration <- function(data, years = c("2019", "2020"),
   plot
 }
 
+# TODO: Produce a plot per week.
 plot_council_districts <- function(data, year, vehicle_type,
                                    use_proportions = TRUE) {
   data <- data %>%
@@ -127,7 +128,7 @@ plot_council_districts <- function(data, year, vehicle_type,
     # Convert counts to proportions, rounded to 2 decimal places.
     total_rides <- nrow(data)
     plot_data <- plot_data %>%
-      mutate(fill_value = round(fill_value / total_rides, 2))
+      mutate(fill_value = round(fill_value / total_rides, 5) * 100)
   }
   
   plot <- ggplot(plot_data, aes(x = start_district, y = end_district)) +
